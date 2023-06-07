@@ -34,18 +34,6 @@ jobs:
         sudo apt-get install -y expect ack antlr3 asciidoc autoconf automake autopoint binutils bison build-essential bzip2 ccache cmake cpio curl device-tree-compiler ecj fastjar flex gawk gettext gcc-multilib g++-multilib git git-core gperf haveged help2man intltool lib32gcc1 libc6-dev-i386 libelf-dev libglib2.0-dev libgmp3-dev libltdl-dev libmpc-dev libmpfr-dev libncurses5-dev libncurses5-dev libreadline-dev libssl-dev libtool libz-dev lrzsz mkisofs msmtp nano ninja-build p7zip p7zip-full patch pkgconf python2.7 python3 python3-pip python3-ply python-docutils qemu-utils re2c rsync scons squashfs-tools subversion swig texinfo uglifyjs upx-ucl unzip vim wget xmlto xxd zlib1g-dev
         echo "update完成"
 
-    - name: Rclone-Install
-      run: wget 'https://raw.githubusercontent.com/wekingchen/my-file/master/rclone/rclone.zip' --no-check-certificate && sudo unzip rclone.zip && sudo chmod a+x rclone && sudo rm -f rclone.zip
-    - name: Rclone-Config
-      env:
-          RCLONE_CONFIG: ${{ secrets.RCLONE_CONFIG }}
-      run: |
-          # 写配置文件
-          mkdir -p ~/.config/rclone/
-          cat << EOF > ~/.config/rclone/rclone.conf
-          $RCLONE_CONFIG
-          EOF
-
     - name: Create new user
       run: |
         sudo adduser "builder" <<EOF
@@ -77,6 +65,8 @@ jobs:
         # 使用旧版1.80.0的boost
         rm -rf feeds/packages/libs/boost
         wget 'https://github.com/${{ GITHUB.REPOSITORY }}/raw/main/myfiles/package.zip' --no-check-certificate && unzip -o package.zip && rm -f package.zip
+        rm -rf ./feeds/packages/net/xray-core
+        svn export https://github.com/keyjsl/openwrt-passwall/branches/wss-multipath/xray-core feeds/packages/net/xray-core
 
         sed -i "/helloworld/d" "feeds.conf.default"
         echo "src-git helloworld https://github.com/fw876/helloworld.git" >> "feeds.conf.default"
@@ -103,30 +93,6 @@ jobs:
         grep '^CONFIG_TARGET.*DEVICE.*=y' .config | sed -r 's/.*DEVICE_(.*)=y/\1/' > DEVICE_NAME
         [ -s DEVICE_NAME ] && echo "DEVICE_NAME=_$(cat DEVICE_NAME)" >> $GITHUB_ENV
         echo "FILE_DATE=_$(date +"%Y%m%d%H%M")" >> $GITHUB_ENV
-
-    - name: Rclone-Run
-      run: |
-          # Rclone-Run
-          # 延迟函数
-          delay()
-          {
-          random_time=$(($RANDOM % $1))
-          echo "等待 ${random_time} 分钟后开始同步"
-          for((i=1;i<=${random_time};i++));
-          do
-          echo "倒计时 $[${random_time}-$i] 分钟"
-          sleep 1m
-          done
-          }
-          # 随机延迟0~15分钟后再进行操作,可自行设置时间
-          delay 1
-          pwd
-          Date=$(date +"%Y%m%d")
-          ./rclone sync -v /home/runner/work/Actions-SFT1200-OpenWrt/Actions-SFT1200-OpenWrt/gl-infra-builder/openwrt-18.06/siflower/openwrt-18.06/bin/ seafile:/ssr/$Date/
-          echo "SeaFile已上传 $Date 文件夹完毕"
-          DELTIME=`date -d "7 days ago" +%Y%m%d`
-          ./rclone purge seafile:/ssr/$DELTIME
-          echo "SeaFile已删除旧文件夹 $DELTIME"
 
     - name: Check space usage
       if: (!cancelled())
@@ -170,6 +136,14 @@ jobs:
         tag_name: ${{ steps.tag.outputs.release_tag }}
         body_path: release.txt
         files: /home/runner/work/Actions-SFT1200-OpenWrt/Actions-SFT1200-OpenWrt/gl-infra-builder/openwrt-18.06/siflower/openwrt-18.06/bin/targets/siflower/openwrt-*squashfs*
+        
+    - name: Upload firmware to Telegram
+      uses: appleboy/telegram-action@v1
+      if: steps.tag.outputs.status == 'success' && !cancelled()
+      with:
+        to: ${{ secrets.TELEGRAM_CHAT_ID }}
+        token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        document: /home/runner/work/Actions-SFT1200-OpenWrt/Actions-SFT1200-OpenWrt/gl-infra-builder/openwrt-18.06/siflower/openwrt-18.06/bin/targets/siflower/openwrt-*squashfs*
 
     - name: Delete workflow runs
       uses: GitRML/delete-workflow-runs@main
@@ -178,7 +152,7 @@ jobs:
         keep_minimum_runs: 10
 
     - name: Remove old Releases
-      uses: dev-drprasad/delete-older-releases@v0.1.0
+      uses: dev-drprasad/delete-older-releases@v0.2.1
       if: env.UPLOAD_RELEASE == 'true' && !cancelled()
       with:
         keep_latest: 3
