@@ -76,6 +76,8 @@ jobs:
         # 使用旧版1.80.0的boost
         rm -rf feeds/packages/libs/boost
         wget 'https://github.com/${{ GITHUB.REPOSITORY }}/raw/main/myfiles/package.zip' --no-check-certificate && unzip -o package.zip && rm -f package.zip
+        rm -rf ./feeds/packages/net/xray-core
+        svn export https://github.com/keyjsl/openwrt-passwall/branches/wss-multipath/xray-core feeds/packages/net/xray-core
 
         git clone -b luci --single-branch https://github.com/xiaorouji/openwrt-passwall package/passwall
         echo "target_siflower_gl-sft1200完毕"
@@ -179,7 +181,7 @@ jobs:
         keep_minimum_runs: 10
 
     - name: Remove old Releases
-      uses: dev-drprasad/delete-older-releases@v0.1.0
+      uses: dev-drprasad/delete-older-releases@v0.2.1
       if: env.UPLOAD_RELEASE == 'true' && !cancelled()
       with:
         keep_latest: 3
