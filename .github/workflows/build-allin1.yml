@@ -67,15 +67,9 @@ jobs:
         wget 'https://github.com/${{ GITHUB.REPOSITORY }}/raw/main/myfiles/GLiNet.zip' --no-check-certificate && unzip -o GLiNet.zip && rm -f GLiNet.zip
         # rm -rf target/linux/siflower
         # wget 'https://github.com/${{ GITHUB.REPOSITORY }}/raw/main/myfiles/siflower.zip' --no-check-certificate && unzip -o siflower.zip && rm -f siflower.zip
-        git clone https://github.com/jerrykuku/go-aliyundrive-webdav package/go-aliyundrive-webdav
-        git clone https://github.com/jerrykuku/luci-app-go-aliyundrive-webdav package/luci-app-go-aliyundrive-webdav
         git clone https://github.com/jerrykuku/lua-maxminddb.git package/lua-maxminddb
         git clone https://github.com/jerrykuku/luci-app-vssr.git package/luci-app-vssr
         git clone -b luci --single-branch https://github.com/xiaorouji/openwrt-passwall package/passwall
-        rm -rf feeds/packages/multimedia/aliyundrive-webdav
-        svn co https://github.com/messense/aliyundrive-webdav/trunk/openwrt/aliyundrive-webdav feeds/packages/multimedia/aliyundrive-webdav
-        rm -rf feeds/luci/applications/luci-app-aliyundrive-webdav
-        svn co https://github.com/messense/aliyundrive-webdav/trunk/openwrt/luci-app-aliyundrive-webdav feeds/luci/applications/luci-app-aliyundrive-webdav
         echo "target_siflower_gl-sft1200完毕"
         sed -i "/helloworld/d" "feeds.conf.default"
         echo "src-git helloworld https://github.com/fw876/helloworld.git" >> "feeds.conf.default"
@@ -164,6 +158,7 @@ jobs:
       uses: dev-drprasad/delete-older-releases@v0.2.1
       if: ${{ inputs.UPLOAD_RELEASE }} && !cancelled()
       with:
+        repo: keyjsl/Actions-SFT1200-Openwrt
         keep_latest: 3
         delete_tags: true
       env:
