@@ -156,7 +156,7 @@ jobs:
       if: env.UPLOAD_RELEASE == 'true' && !cancelled()
       with:
         repo: keyjsl/Actions-SFT1200-Openwrt
-        keep_latest: 3
+        keep_latest: 4
         delete_tags: true
       env:
         GITHUB_TOKEN: ${{ secrets.TOKEN_GITHUB }}
