@@ -150,7 +150,7 @@ jobs:
       uses: GitRML/delete-workflow-runs@main
       with:
         retain_days: 1
-        keep_minimum_runs: 10
+        keep_minimum_runs: 4
       env:
         GITHUB_TOKEN: ${{ secrets.TOKEN_GITHUB }}
 
