@@ -145,14 +145,6 @@ jobs:
         token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
         document: /home/runner/work/Actions-SFT1200-OpenWrt/Actions-SFT1200-OpenWrt/gl-infra-builder/openwrt-18.06/siflower/openwrt-18.06/bin/targets/siflower/openwrt-*squashfs*
 
-    - name: Delete workflow runs
-      uses: ActionsRML/delete-workflow-runs@main
-      with:
-        retain_days: 1
-        keep_minimum_runs: 4
-      env:
-        GITHUB_TOKEN: ${{ secrets.TOKEN_GITHUB }}
-
     - name: Remove old Releases
       uses: dev-drprasad/delete-older-releases@v0.2.1
       if: env.UPLOAD_RELEASE == 'true' && !cancelled()
